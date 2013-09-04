@@ -1,0 +1,506 @@
+<?php
+
+/*You don't need to add/remove the schema manually any more in Drupal 7; 
+ * implementing hook_schema() is enough. Drupal installs the schema for you, and then when you it 
+ * hits your implementation hook_install(),  * the table does already exists so it throws an error.
+ * */
+
+// Implement hook_install
+function piece_of_legislation_install()
+{
+	//Runs in both installer and runtime
+	$t = get_t();
+	
+	// Machine name of the content type
+	$name = 'piece_of_legislation';
+	
+	// Define the node type
+	// Need to come up with a way to specify title generation automatically.
+	// Title generation pattern
+	// $node->field_legislation_title['und'][0]['value'];
+	$piece_of_legislation = array(
+		'type' => $name,
+		'name' => $t('Piece of Legislation'),
+		'base' => 'node_content',
+		'title_label' => $t('Legislation Title'),
+		'description' => $t('Piece of Legislation.'),
+		'custom' => TRUE,
+	);
+	
+	// Set node defaults
+	$content_type = node_type_set_defaults($piece_of_legislation);
+	
+	// Add body field
+	//node_add_body_field($content_type, $t('Description'));
+	
+	// Add Fields
+	
+	// Save Content type
+	node_type_save($content_type);
+	
+	// Automatically publish content
+	/*
+	 * You have to understand the difference between field_create_field and field_create_instance. 
+	 * The first will create a new table in the database and contains how the data is saved into db, 
+	 * the second will be based on an existing field linked to the content type and contains display settings.
+	*/
+	
+	// Create All the fields
+	foreach(_piece_of_legislation_fields() as $fields){
+		field_create_field($fields);
+	}
+	
+	// Create All the instances for our fields
+	foreach(_piece_of_legislation_instances() as $instance){
+		$instance['entity_type'] ='node';
+		$instance['bundle'] = $piece_of_legislation['type'];
+		field_create_instance($instance);
+	}
+}
+
+// List Fields to be added to your content type
+function _piece_of_legislation_fields(){
+		$t = get_t();
+		return array(
+			// FIELD LEGISLATION TITLE
+			'field_legislation_title' => array(
+  					'translatable' => '0',
+  					'entity_types' => array(),
+  					'settings' => array(),
+  					'storage' => array(
+    				'type' => 'field_sql_storage',
+    				'settings' => array(),
+				    'module' => 'field_sql_storage',
+				    'active' => '1',
+				    'details' => array(
+				      'sql' => array(
+				        'FIELD_LOAD_CURRENT' => array(
+				          'field_data_field_legislation_title' => array(
+				            'value' => 'field_legislation_title_value',
+				            'format' => 'field_legislation_title_format',
+				          ),
+				        ),
+				        'FIELD_LOAD_REVISION' => array(
+				          'field_revision_field_legislation_title' => array(
+				            'value' => 'field_legislation_title_value',
+				            'format' => 'field_legislation_title_format',
+				          ),
+				        ),
+				      ),
+				    ),
+				  ),
+				  'foreign keys' => array(
+				    'format' => array(
+				      'table' => 'filter_format',
+				      'columns' => array(
+				        'format' => 'format',
+				      ),
+				    ),
+				  ),
+				  'indexes' => array(
+				    'format' => array(
+				      'format',
+				    ),
+				  ),
+				  'field_name' => 'field_legislation_title',
+				  'type' => 'text_long',
+				  'module' => 'text',
+				  'active' => '1',
+				  'locked' => '0',
+				  'cardinality' => '1',
+				  'deleted' => '0',
+				  'columns' => array(
+				    'value' => array(
+				      'type' => 'text',
+				      'size' => 'big',
+				      'not null' => FALSE,
+				    ),
+				    'format' => array(
+				      'type' => 'varchar',
+				      'length' => 255,
+				      'not null' => FALSE,
+				    ),
+				  ),
+				  'bundles' => array(
+				    'node' => array(
+				      'piece_of_legislation',
+				    ),
+				  ),
+				),
+				// PDF OF LEGISLATION
+				'field_pdf_of_legislation' => array(
+					  'translatable' => '0',
+					  'entity_types' => array(),
+					  'settings' => array(
+					    'display_field' => 0,
+					    'display_default' => 0,
+					    'uri_scheme' => 'public',
+					  ),
+					  'storage' => array(
+					    'type' => 'field_sql_storage',
+					    'settings' => array(),
+					    'module' => 'field_sql_storage',
+					    'active' => '1',
+					    'details' => array(
+					      'sql' => array(
+					        'FIELD_LOAD_CURRENT' => array(
+					          'field_data_field_pdf_of_legislation' => array(
+					            'fid' => 'field_pdf_of_legislation_fid',
+					            'display' => 'field_pdf_of_legislation_display',
+					            'description' => 'field_pdf_of_legislation_description',
+					          ),
+					        ),
+					        'FIELD_LOAD_REVISION' => array(
+					          'field_revision_field_pdf_of_legislation' => array(
+					            'fid' => 'field_pdf_of_legislation_fid',
+					            'display' => 'field_pdf_of_legislation_display',
+					            'description' => 'field_pdf_of_legislation_description',
+					          ),
+					        ),
+					      ),
+					    ),
+					  ),
+					  'foreign keys' => array(
+					    'fid' => array(
+					      'table' => 'file_managed',
+					      'columns' => array(
+					        'fid' => 'fid',
+					      ),
+					    ),
+					  ),
+					  'indexes' => array(
+					    'fid' => array(
+					      'fid',
+					    ),
+					  ),
+					  'field_name' => 'field_pdf_of_legislation',
+					  'type' => 'file',
+					  'module' => 'file',
+					  'active' => '1',
+					  'locked' => '0',
+					  'cardinality' => '1',
+					  'deleted' => '0',
+					  'columns' => array(
+					    'fid' => array(
+					      'description' => 'The {file_managed}.fid being referenced in this field.',
+					      'type' => 'int',
+					      'not null' => FALSE,
+					      'unsigned' => TRUE,
+					    ),
+					    'display' => array(
+					      'description' => 'Flag to control whether this file should be displayed when viewing content.',
+					      'type' => 'int',
+					      'size' => 'tiny',
+					      'unsigned' => TRUE,
+					      'not null' => TRUE,
+					      'default' => 1,
+					    ),
+					    'description' => array(
+					      'description' => 'A description of the file.',
+					      'type' => 'text',
+					      'not null' => FALSE,
+					    ),
+					  ),
+					  'bundles' => array(
+					    'node' => array(
+					      'piece_of_legislation',
+					    ),
+					  ),
+					),
+					//Field Chapter
+					'field_chapter' => array(
+						  'translatable' => '0',
+						  'entity_types' => array(),
+						  'settings' => array(),
+						  'storage' => array(
+						    'type' => 'field_sql_storage',
+						    'settings' => array(),
+						    'module' => 'field_sql_storage',
+						    'active' => '1',
+						    'details' => array(
+						      'sql' => array(
+						        'FIELD_LOAD_CURRENT' => array(
+						          'field_data_field_chapter' => array(
+						            'value' => 'field_chapter_value',
+						          ),
+						        ),
+						        'FIELD_LOAD_REVISION' => array(
+						          'field_revision_field_chapter' => array(
+						            'value' => 'field_chapter_value',
+						          ),
+						        ),
+						      ),
+						    ),
+						  ),
+						  'foreign keys' => array(),
+						  'indexes' => array(),
+						  'field_name' => 'field_chapter',
+						  'type' => 'number_integer',
+						  'module' => 'number',
+						  'active' => '1',
+						  'locked' => '0',
+						  'cardinality' => '1',
+						  'deleted' => '0',
+						  'columns' => array(
+						    'value' => array(
+						      'type' => 'int',
+						      'not null' => FALSE,
+						    ),
+						  ),
+						  'bundles' => array(
+						    'node' => array(
+						      'learn_content_type',
+						    ),
+						  ),
+						),
+						// Number of Articles
+						'field_number_of_articles' => array(
+								  'translatable' => '0',
+								  'entity_types' => array(),
+								  'settings' => array(),
+								  'storage' => array(
+								    'type' => 'field_sql_storage',
+								    'settings' => array(),
+								    'module' => 'field_sql_storage',
+								    'active' => '1',
+								    'details' => array(
+								      'sql' => array(
+								        'FIELD_LOAD_CURRENT' => array(
+								          'field_data_field_number_of_articles' => array(
+								            'value' => 'field_number_of_articles_value',
+								          ),
+								        ),
+								        'FIELD_LOAD_REVISION' => array(
+								          'field_revision_field_number_of_articles' => array(
+								            'value' => 'field_number_of_articles_value',
+								          ),
+								        ),
+								      ),
+								    ),
+								  ),
+								  'foreign keys' => array(),
+								  'indexes' => array(),
+								  'field_name' => 'field_number_of_articles',
+								  'type' => 'number_integer',
+								  'module' => 'number',
+								  'active' => '1',
+								  'locked' => '0',
+								  'cardinality' => '1',
+								  'deleted' => '0',
+								  'columns' => array(
+								    'value' => array(
+								      'type' => 'int',
+								      'not null' => FALSE,
+								    ),
+								  ),
+								  'bundles' => array(
+								    'node' => array(
+								      'learn_content_type',
+								    ),
+								  ),
+								),
+							
+					
+				
+	);
+					
+		
+}
+
+// List instances of your fields
+function _piece_of_legislation_instances(){
+		$t = get_t();
+		return array(
+				// FIELD LEGISLATION TITLE
+				'field_legislation_title' => array(
+				  'label' => 'Legislation Title',
+				  'widget' => array(
+				    'weight' => '0',
+				    'type' => 'text_textarea',
+				    'module' => 'text',
+				    'active' => 1,
+				    'settings' => array(
+				      'rows' => '3',
+				    ),
+				  ),
+				  'settings' => array(
+				    'text_processing' => '0',
+				    'user_register_form' => FALSE,
+				  ),
+				  'display' => array(
+				    'default' => array(
+				      'label' => 'above',
+				      'type' => 'text_default',
+				      'weight' => '2',
+				      'settings' => array(),
+				      'module' => 'text',
+				    ),
+				    'teaser' => array(
+				      'type' => 'hidden',
+				      'label' => 'above',
+				      'settings' => array(),
+				      'weight' => 0,
+				    ),
+				  ),
+				  'required' => 0,
+				  'description' => '',
+				  'default_value' => NULL,
+				  'field_name' => 'field_legislation_title',
+				  'entity_type' => 'node',
+				  'bundle' => 'piece_of_legislation',
+				  'deleted' => '0',
+				),
+				// PDF OF LEGISLATION
+				'field_pdf_of_legislation' => array(
+					  'label' => 'PDF of Legislation',
+					  'widget' => array(
+					    'weight' => '1',
+					    'type' => 'pdf_preview',
+					    'module' => 'pdf_filefield_preview_widget',
+					    'active' => 0,
+					    'settings' => array(
+					      'progress_indicator' => 'throbber',
+					    ),
+					  ),
+					  'settings' => array(
+					    'file_directory' => '',
+					    'file_extensions' => 'pdf',
+					    'max_filesize' => '',
+					    'description_field' => 0,
+					    'filefield_paths_enabled' => 1,
+					    'filefield_paths' => array(
+					      'file_path' => array(
+					        'value' => '',
+					        'options' => array(
+					          'pathauto' => FALSE,
+					          'transliterate' => 0,
+					        ),
+					      ),
+					      'retroactive_update' => 0,
+					      'active_updating' => 0,
+					      'file_name' => array(
+					        'value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
+					        'options' => array(
+					          'pathauto' => FALSE,
+					          'transliterate' => 0,
+					        ),
+					      ),
+					    ),
+					    'user_register_form' => FALSE,
+					  ),
+					  'display' => array(
+					    'default' => array(
+					      'label' => 'above',
+					      'type' => 'file_default',
+					      'weight' => '7',
+					      'settings' => array(),
+					      'module' => 'file',
+					    ),
+					    'teaser' => array(
+					      'type' => 'hidden',
+					      'label' => 'above',
+					      'settings' => array(),
+					      'weight' => 0,
+					    ),
+					  ),
+					  'required' => 0,
+					  'description' => '',
+					  'field_name' => 'field_pdf_of_legislation',
+					  'entity_type' => 'node',
+					  'bundle' => 'piece_of_legislation',
+					  'deleted' => '0',
+					),
+					// Field Chapter
+					'field_chapter' => array(
+						  'label' => 'Chapter',
+						  'widget' => array(
+						    'weight' => '2',
+						    'type' => 'number',
+						    'module' => 'number',
+						    'active' => 0,
+						    'settings' => array(),
+						  ),
+						  'settings' => array(
+						    'min' => '',
+						    'max' => '',
+						    'prefix' => '',
+						    'suffix' => '',
+						    'user_register_form' => FALSE,
+						  ),
+						  'display' => array(
+						    'default' => array(
+						      'label' => 'above',
+						      'type' => 'number_integer',
+						      'weight' => '1',
+						      'settings' => array(
+						        'thousand_separator' => ' ',
+						        'prefix_suffix' => 1,
+						        'decimal_separator' => '.',
+						        'scale' => 0,
+						      ),
+						      'module' => 'number',
+						    ),
+						    'teaser' => array(
+						      'type' => 'hidden',
+						      'label' => 'above',
+						      'settings' => array(),
+						      'weight' => 0,
+						    ),
+						  ),
+						  'required' => 1,
+						  'description' => '',
+						  'default_value' => NULL,
+						  'field_name' => 'field_chapter',
+						  'entity_type' => 'node',
+						  'bundle' => 'learn_content_type',
+						  'deleted' => '0',
+						),
+						// Number of Articles
+						'field_number_of_articles' => array(
+							  'label' => 'Number of Articles',
+							  'widget' => array(
+							    'weight' => '3',
+							    'type' => 'number',
+							    'module' => 'number',
+							    'active' => 0,
+							    'settings' => array(),
+							  ),
+							  'settings' => array(
+							    'min' => '',
+							    'max' => '',
+							    'prefix' => '',
+							    'suffix' => '',
+							    'user_register_form' => FALSE,
+							  ),
+							  'display' => array(
+							    'default' => array(
+							      'label' => 'above',
+							      'type' => 'number_integer',
+							      'weight' => '5',
+							      'settings' => array(
+							        'thousand_separator' => ' ',
+							        'decimal_separator' => '.',
+							        'scale' => 0,
+							        'prefix_suffix' => TRUE,
+							      ),
+							      'module' => 'number',
+							    ),
+							    'teaser' => array(
+							      'type' => 'hidden',
+							      'label' => 'above',
+							      'settings' => array(),
+							      'weight' => 0,
+							    ),
+							  ),
+							  'required' => 1,
+							  'description' => '',
+							  'default_value' => NULL,
+							  'field_name' => 'field_number_of_articles',
+							  'entity_type' => 'node',
+							  'bundle' => 'learn_content_type',
+							  'deleted' => '0',
+							),
+					
+					
+	);
+}

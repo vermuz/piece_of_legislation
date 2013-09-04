@@ -1,0 +1,6 @@
+name = Legislation Page
+project = piece_of_legislation
+description = Provides the display framework for legislation pages.
+package = BNALD
+version = 7.x-1.01
+core = 7.x

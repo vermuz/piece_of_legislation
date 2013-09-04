@@ -1,0 +1,31 @@
+<?php
+function piece_of_legislation_node_view($node, $view_mode, $langcode){
+	//kpr($node);
+}
+
+function piece_of_legislation_menu(){
+	
+	$items = array();
+	// Register URL with Drupal
+	$items['legislation_full_text/%node'] = array(
+    	'page callback' => 'full_legislative_text_page',
+    	'page arguments' => array(1),
+    	'access callback' => TRUE,
+    	'access arguments' => array('access content'), 
+	);
+	return $items;
+}
+// Pass node information to the full page
+function full_legislative_text_page($node) {
+   return theme('legislation_full_text', array('node'=>$node));
+}
+//Provide template info for the full page
+function piece_of_legislation_theme($existing, $type, $theme, $path) {
+	return array(
+		'legislation_full_text'=> array(
+			'variables' => array('node'),
+			'template' => 'page--legislation_full_text',
+			'path' => drupal_get_path('module', 'piece_of_legislation').'/templates',
+		),
+	);
+}
